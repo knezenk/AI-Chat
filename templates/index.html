@@ -69,6 +69,7 @@
     const messagesDiv = document.getElementById('messages');
     const input = document.getElementById('user-input');
 
+    // Função para adicionar mensagens na área de chat
     function addMessage(sender, text) {
       const div = document.createElement('div');
       div.className = 'message';
@@ -77,6 +78,7 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
+    // Função para enviar mensagens de texto
     function sendMessage(msg = null) {
       const message = msg || input.value.trim();
       if (!message) return;
@@ -93,6 +95,7 @@
       .catch(err => addMessage('bot', '❌ Erro ao conectar com o servidor.'));
     }
 
+    // Função para iniciar o reconhecimento de voz
     function startVoice() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
@@ -122,6 +125,14 @@
         console.error('Erro:', event);
       };
     }
+
+    // Enviar mensagem ao pressionar Enter
+    input.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();  // Impede quebra de linha
+        sendMessage();
+      }
+    });
   </script>
 
 </body>
