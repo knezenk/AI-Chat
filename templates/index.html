@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chat Contábil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    .chat-container {
+      background: white;
+      max-width: 600px;
+      margin: auto;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 6px;
+      background: #fafafa;
+      margin-bottom: 15px;
+    }
+    .message {
+      margin-bottom: 10px;
+    }
+    .user { font-weight: bold; color: #007bff; }
+    .bot { font-weight: bold; color: #28a745; }
+    input[type="text"] {
+      width: calc(100% - 100px);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .send-btn {
+      background: #007bff;
+      color: white;
+    }
+    .mic-btn {
+      background: orange;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="chat-container">
+    <h2>Assistente Contábil</h2>
+    <div class="messages" id="messages"></div>
+    <input type="text" id="user-input" placeholder="Digite sua pergunta..." />
+    <button class="mic-btn" onclick="startVoice()">🎤 Microfone</button>
+    <button class="send-btn" onclick="sendMessage()">Enviar</button>
+  </div>
+
+  <script>
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('user-input');
+
+    function addMessage(sender, text) {
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.innerHTML = `<span class="${sender}">${sender === 'user' ? 'Você' : 'Bot'}:</span> ${text}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function sendMessage(msg = null) {
+      const message = msg || input.value.trim();
+      if (!message) return;
+      addMessage('user', message);
+      input.value = '';
+
+      fetch('/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      })
+      .then(res => res.json())
+      .then(data => addMessage('bot', data.reply))
+      .catch(err => addMessage('bot', '❌ Erro ao conectar com o servidor.'));
+    }
+
+    function startVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Reconhecimento de voz não suportado neste navegador.');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.start();
+
+      recognition.onstart = () => {
+        addMessage('bot', '🎙️ Ouvindo...');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        input.value = transcript;
+        sendMessage(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        addMessage('bot', `⚠️ Erro no reconhecimento de voz: ${event.error}`);
+        console.error('Erro:', event);
+      };
+    }
+  </script>
+
+</body>
+</html>
