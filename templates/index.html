@@ -89,28 +89,30 @@
         body: JSON.stringify({ message: data.reply })
       })
       .then(res => res.json())
-      .then(data => {
-        addMessage('bot', data.reply);
+.then(data => {
+  console.log('Resposta do bot:', data);  // Adicionei log para depuração
+  addMessage('bot', data.reply);
 
-        // Solicita o áudio da RESPOSTA do bot
-        fetch('/audio', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: data.reply })
-        })
-        .then(resp => resp.blob())
-        .then(blob => {
-          const audioURL = URL.createObjectURL(blob);
-          const audio = new Audio(audioURL);
-          audio.playbackRate = 1.6; // Áudio mais acelerado
-          audio.play();
-        })
-        .catch(err => {
-          addMessage('bot', '🔇 Erro ao carregar áudio.');
-          console.error('Erro no áudio:', err);
-        });
-      })
-      .catch(err => addMessage('bot', '❌ Erro ao conectar com o servidor.'));
+  // Solicita o áudio da resposta do bot
+  fetch('/audio', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: data.reply })
+  })
+  .then(resp => resp.blob())
+  .then(blob => {
+    const audioURL = URL.createObjectURL(blob);
+    const audio = new Audio(audioURL);
+    audio.playbackRate = 1.6; // Áudio mais acelerado
+    audio.play();
+  })
+  .catch(err => {
+    addMessage('bot', '🔇 Erro ao carregar áudio.');
+    console.error('Erro no áudio:', err);
+  });
+})
+.catch(err => addMessage('bot', '❌ Erro ao conectar com o servidor.'));
+
     }
 
     function startVoice() {
