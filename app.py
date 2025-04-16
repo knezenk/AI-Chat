@@ -1,3 +1,6 @@
+from gtts import gTTS
+import tempfile
+from flask import send_file
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from dotenv import load_dotenv
 import os
@@ -53,6 +56,28 @@ def send():
         return jsonify({"reply": resposta})
     except Exception as e:
         return jsonify({"reply": f"Erro: {str(e)}"})
+
+
+@app.route("/audio", methods=["POST"])
+def audio():
+    if not session.get("logged_in"):
+        return jsonify({"erro": "Não autorizado."}), 401
+
+    user_msg = request.get_json().get("message")
+    try:
+        resposta = agent(user_msg)
+
+        # Converte resposta em áudio
+        tts = gTTS(text=resposta, lang='pt')
+        temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        tts.save(temp_audio.name)
+
+        # Retorna áudio
+        return send_file(temp_audio.name, mimetype="audio/mpeg")
+
+    except Exception as e:
+        return jsonify({"erro": f"Erro ao gerar áudio: {str(e)}"}), 500
+
 
 @app.route("/logout")
 def logout():
