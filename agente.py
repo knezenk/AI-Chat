@@ -20,7 +20,7 @@ def resumir_bloco(bloco, client):
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "Resuma esse conteúdo contábil para uso posterior:"},
+                {"role": "system", "content": "Resuma essas notícias para um bate-papo com o cliente:"},
                 {"role": "user", "content": bloco}
             ],
             temperature=0.3
@@ -58,7 +58,7 @@ def agent(msg):
     messages = [
         {
             "role": "system",
-            "content": f"Você é um assistente contábil didático e claro. Use o seguinte conteúdo como base:\n{conhecimento_contabil}"
+            "content": f"Você é um assistente jornalístico didático e claro. Use o seguinte conteúdo como :\n{conhecimento_contabil}"
         },
         {
             "role": "user",
