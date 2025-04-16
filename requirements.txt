@@ -8,3 +8,4 @@ pyngrok
 uvicorn
 groq
 gTTS
+flask-cors
