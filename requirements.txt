@@ -1,3 +1,9 @@
 Flask==2.3.2
 python-dotenv==1.0.1
 requests
+pyngrok
+fastapi
+nest-asyncio
+pyngrok
+uvicorn
+groq
