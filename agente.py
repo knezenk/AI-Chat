@@ -36,7 +36,7 @@ def realizar_treinamento():
     client = Groq(api_key=chave_groq)
 
     try:
-        blocos = dividir_arquivo_em_blocos("treinamento.txt", tamanho_maximo=3000)
+        blocos = dividir_arquivo_em_blocos("treinamento2.txt", tamanho_maximo=3000)
         resumos = []
 
         for bloco in blocos[:5]:  # Limita o número de blocos para evitar sobrecarga
