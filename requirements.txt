@@ -7,3 +7,4 @@ nest-asyncio
 pyngrok
 uvicorn
 groq
+gTTS
