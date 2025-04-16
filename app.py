@@ -1,84 +1,98 @@
-from groq import Groq
+from gtts import gTTS
+import tempfile
+from flask import send_file
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from dotenv import load_dotenv
 import os
+import requests
+from pyngrok import ngrok, conf
+from agente import agent, realizar_treinamento
+from flask_cors import CORS  # Importação correta do CORS
 
-# API key da Groq e modelo a ser usado
-chave_groq = "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"
-model = "llama3-70b-8192"
+# Load variáveis de ambiente
+load_dotenv()
 
-# Variável global que armazenará o conhecimento resumido
-conhecimento_contabil = ""
+app = Flask(__name__)
 
-# 📖 Função: Divide um arquivo em blocos de texto
-def dividir_arquivo_em_blocos(caminho, tamanho_maximo=3000):
-    with open(caminho, "r", encoding="utf-8") as f:
-        texto = f.read()
-    return [texto[i:i + tamanho_maximo] for i in range(0, len(texto), tamanho_maximo)]
+# Configurações do CORS devem vir depois de instanciar o app
+CORS(app)
 
-# 📚 Função: Resume um bloco de texto usando o modelo da Groq
-def resumir_bloco(bloco, client):
-    #                {"role": "system", "content": "Resuma esse conteúdo contábil para uso posterior:"},
+app.secret_key = os.getenv("SECRET_KEY")
+
+# Configurações
+USERNAME = os.getenv("USERNAME")
+PASSWORD = os.getenv("PASSWORD")
+NGROK = os.getenv("NGROK")
+
+# Configurar ngrok
+conf.get_default().auth_token = NGROK
+ngrok_tunnel = ngrok.connect(5010)
+print("🔗 URL pública gerada pelo ngrok:", ngrok_tunnel.public_url)
+
+# Realiza treinamento ao iniciar o servidor
+realizar_treinamento()
+
+# Rotas
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if username == USERNAME and password == PASSWORD:
+            session["logged_in"] = True
+            return redirect(url_for("chat"))
+        return render_template("login.html", error="Usuário ou senha incorretos.")
+    return render_template("login.html")
+
+@app.route("/chat")
+def chat():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+    return render_template("index.html")
+
+@app.route("/send", methods=["POST"])
+def send():
+    if not session.get("logged_in"):
+        return jsonify({"reply": "Não autorizado."}), 401
+
+    user_msg = request.get_json().get("message")
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "Resuma essas notícias para um bate-papo com o cliente:"},
-                {"role": "user", "content": bloco}
-            ],
-            temperature=0.2,
-            max_tokens = 500
-        )
-        return response.choices[0].message.content.strip()
+        resposta = agent(user_msg)  # Chamada ao agente
+        return jsonify({"reply": resposta})
     except Exception as e:
-        return f"Erro no resumo: {e}"
+        return jsonify({"reply": f"Erro: {str(e)}"})
 
-# 🧠 Treinamento do agente baseado no conteúdo do arquivo
-def realizar_treinamento():
-    global conhecimento_contabil
-    print("📚 Iniciando treinamento com base no conteúdo...")
-    client = Groq(api_key=chave_groq)
 
+@app.route("/audio", methods=["POST"])
+def audio():
+    if not session.get("logged_in"):
+        return jsonify({"erro": "Não autorizado."}), 401
+
+    user_msg = request.get_json().get("message")
     try:
-        blocos = dividir_arquivo_em_blocos("treinamento2.txt", tamanho_maximo=3000)
-        resumos = []
+        resposta = agent(user_msg)
 
-        for bloco in blocos[:5]:  # Limita o número de blocos para evitar sobrecarga
-            resumo = resumir_bloco(bloco, client)
-            resumos.append(resumo)
+        # Converte resposta em áudio
+        tts = gTTS(text=resposta, lang='pt')
+        temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        tts.save(temp_audio.name)
 
-        conhecimento_contabil = "\n".join(resumos)
-        print("✅ Treinamento concluído!")
+        print(f"Áudio gerado com sucesso: {temp_audio.name}")  # Adicionado para depuração
+
+        # Retorna áudio
+        return send_file(temp_audio.name, mimetype="audio/mpeg")
+
     except Exception as e:
-        print(f"❌ Erro durante o treinamento: {e}")
+        print("Erro ao gerar áudio:", str(e))  # Adicionado para depuração
+        return jsonify({"erro": f"Erro ao gerar áudio: {str(e)}"}), 500
 
-# 🤖 Função do agente: responde com base no conteúdo treinado
-def agent(msg):
-    if not conhecimento_contabil:
-        return "⚠️ Conhecimento ainda não foi treinado."
 
-    client = Groq(api_key=chave_groq)
 
-#            "content": f"Você é um assistente contábil didático e claro. Use o seguinte conteúdo como base:\n{conhecimento_contabil}"
-    
-    messages = [
-        {
-            "role": "system",
-            "content": f"""Você é um assistente jornalístico didático e claro. 
-            Se apresente sempre como um jornalista virtual. Apto pra tirar dúvidas sobre as notícias capturadas.
-            Não responda nada sobre o que for fora do contexto. Você é um jornalista e nada mais.
-            Use o seguinte conteúdo como :\n{conhecimento_contabil}"""
-        },
-        {
-            "role": "user",
-            "content": msg
-        }
-    ]
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
-    try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=0.6
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"❌ Erro ao consultar a Groq API: {e}"
+# Rodar o servidor Flask
+if __name__ == "__main__":
+    app.run(port=5010)
