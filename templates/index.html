@@ -69,7 +69,6 @@
     const messagesDiv = document.getElementById('messages');
     const input = document.getElementById('user-input');
 
-    // Função para adicionar mensagens na área de chat
     function addMessage(sender, text) {
       const div = document.createElement('div');
       div.className = 'message';
@@ -78,7 +77,6 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // Função para enviar mensagens de texto
     function sendMessage(msg = null) {
       const message = msg || input.value.trim();
       if (!message) return;
@@ -92,30 +90,29 @@
       })
       .then(res => res.json())
       .then(data => {
-  addMessage('bot', data.reply);
+        addMessage('bot', data.reply);
 
-  // Solicita o áudio
-  fetch('/audio', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
-  })
-  .then(resp => resp.blob())
-  .then(blob => {
-    const audioURL = URL.createObjectURL(blob);
-    const audio = new Audio(audioURL);
-    audio.play();
-  })
-  .catch(err => {
-    addMessage('bot', '🔇 Erro ao carregar áudio.');
-    console.error('Erro no áudio:', err);
-  });
-})
-
+        // Solicita o áudio da RESPOSTA do bot
+        fetch('/audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: data.reply })
+        })
+        .then(resp => resp.blob())
+        .then(blob => {
+          const audioURL = URL.createObjectURL(blob);
+          const audio = new Audio(audioURL);
+          audio.playbackRate = 1.3; // Áudio mais acelerado
+          audio.play();
+        })
+        .catch(err => {
+          addMessage('bot', '🔇 Erro ao carregar áudio.');
+          console.error('Erro no áudio:', err);
+        });
+      })
       .catch(err => addMessage('bot', '❌ Erro ao conectar com o servidor.'));
     }
 
-    // Função para iniciar o reconhecimento de voz
     function startVoice() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
@@ -146,10 +143,9 @@
       };
     }
 
-    // Enviar mensagem ao pressionar Enter
     input.addEventListener('keydown', function(event) {
       if (event.key === 'Enter') {
-        event.preventDefault();  // Impede quebra de linha
+        event.preventDefault();
         sendMessage();
       }
     });
