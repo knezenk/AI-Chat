@@ -23,7 +23,8 @@ def resumir_bloco(bloco, client):
                 {"role": "system", "content": "Resuma essas notícias para um bate-papo com o cliente:"},
                 {"role": "user", "content": bloco}
             ],
-            temperature=0.3
+            temperature=0.2,
+            max_tokens = 500
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
