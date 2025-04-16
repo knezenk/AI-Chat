@@ -7,15 +7,16 @@ import os
 import requests
 from pyngrok import ngrok, conf
 from agente import agent, realizar_treinamento
-from flask_cors import CORS
-
-# Depois de criar o app
-CORS(app)
+from flask_cors import CORS  # Importação correta do CORS
 
 # Load variáveis de ambiente
 load_dotenv()
 
 app = Flask(__name__)
+
+# Configurações do CORS devem vir depois de instanciar o app
+CORS(app)
+
 app.secret_key = os.getenv("SECRET_KEY")
 
 # Configurações
