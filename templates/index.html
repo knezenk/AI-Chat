@@ -91,7 +91,27 @@
         body: JSON.stringify({ message })
       })
       .then(res => res.json())
-      .then(data => addMessage('bot', data.reply))
+      .then(data => {
+  addMessage('bot', data.reply);
+
+  // Solicita o áudio
+  fetch('/audio', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message })
+  })
+  .then(resp => resp.blob())
+  .then(blob => {
+    const audioURL = URL.createObjectURL(blob);
+    const audio = new Audio(audioURL);
+    audio.play();
+  })
+  .catch(err => {
+    addMessage('bot', '🔇 Erro ao carregar áudio.');
+    console.error('Erro no áudio:', err);
+  });
+})
+
       .catch(err => addMessage('bot', '❌ Erro ao conectar com o servidor.'));
     }
 
