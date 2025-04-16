@@ -16,6 +16,7 @@ def dividir_arquivo_em_blocos(caminho, tamanho_maximo=3000):
 
 # 📚 Função: Resume um bloco de texto usando o modelo da Groq
 def resumir_bloco(bloco, client):
+    #                {"role": "system", "content": "Resuma esse conteúdo contábil para uso posterior:"},
     try:
         response = client.chat.completions.create(
             model=model,
@@ -56,6 +57,8 @@ def agent(msg):
 
     client = Groq(api_key=chave_groq)
 
+#            "content": f"Você é um assistente contábil didático e claro. Use o seguinte conteúdo como base:\n{conhecimento_contabil}"
+    
     messages = [
         {
             "role": "system",
