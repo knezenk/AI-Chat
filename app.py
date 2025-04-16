@@ -7,6 +7,10 @@ import os
 import requests
 from pyngrok import ngrok, conf
 from agente import agent, realizar_treinamento
+from flask_cors import CORS
+
+# Depois de criar o app
+CORS(app)
 
 # Load variáveis de ambiente
 load_dotenv()
