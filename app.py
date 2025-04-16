@@ -76,11 +76,15 @@ def audio():
         temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
         tts.save(temp_audio.name)
 
+        print(f"Áudio gerado com sucesso: {temp_audio.name}")  # Adicionado para depuração
+
         # Retorna áudio
         return send_file(temp_audio.name, mimetype="audio/mpeg")
 
     except Exception as e:
+        print("Erro ao gerar áudio:", str(e))  # Adicionado para depuração
         return jsonify({"erro": f"Erro ao gerar áudio: {str(e)}"}), 500
+
 
 
 @app.route("/logout")
