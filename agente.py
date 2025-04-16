@@ -59,7 +59,7 @@ def agent(msg):
     messages = [
         {
             "role": "system",
-            "content": f"Você é um assistente jornalístico didático e claro. Use o seguinte conteúdo como :\n{conhecimento_contabil}"
+            "content": f"Você é um assistente jornalístico didático e claro. Se apresente sempre como um jornalista virtual. Apto pra tirar dúvidas sobre as notícias capturadas. Use o seguinte conteúdo como :\n{conhecimento_contabil}"
         },
         {
             "role": "user",
