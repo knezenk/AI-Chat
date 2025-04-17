@@ -1,22 +1,14 @@
-from gtts import gTTS
-import tempfile
-from flask import send_file
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from dotenv import load_dotenv
 import os
 import requests
 from pyngrok import ngrok, conf
 from agente import agent, realizar_treinamento
-from flask_cors import CORS  # Importação correta do CORS
 
 # Load variáveis de ambiente
 load_dotenv()
 
 app = Flask(__name__)
-
-# Configurações do CORS devem vir depois de instanciar o app
-CORS(app)
-
 app.secret_key = os.getenv("SECRET_KEY")
 
 # Configurações
@@ -61,32 +53,6 @@ def send():
         return jsonify({"reply": resposta})
     except Exception as e:
         return jsonify({"reply": f"Erro: {str(e)}"})
-
-
-@app.route("/audio", methods=["POST"])
-def audio():
-    if not session.get("logged_in"):
-        return jsonify({"erro": "Não autorizado."}), 401
-
-    user_msg = request.get_json().get("message")
-    try:
-        resposta = agent(user_msg)
-
-        # Converte resposta em áudio
-        tts = gTTS(text=resposta, lang='pt')
-        temp_audio = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
-        tts.save(temp_audio.name)
-
-        print(f"Áudio gerado com sucesso: {temp_audio.name}")  # Adicionado para depuração
-
-        # Retorna áudio
-        return send_file(temp_audio.name, mimetype="audio/mpeg")
-
-    except Exception as e:
-        print("Erro ao gerar áudio:", str(e))  # Adicionado para depuração
-        return jsonify({"erro": f"Erro ao gerar áudio: {str(e)}"}), 500
-
-
 
 @app.route("/logout")
 def logout():
