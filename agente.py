@@ -17,11 +17,12 @@ def dividir_arquivo_em_blocos(caminho, tamanho_maximo=3000):
 # 📚 Função: Resume um bloco de texto usando o modelo da Groq
 def resumir_bloco(bloco, client):
     #                {"role": "system", "content": "Resuma esse conteúdo contábil para uso posterior:"},
+    # {"role": "system", "content": "Resuma essas notícias para um bate-papo com o cliente:"}
     try:
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "Resuma essas notícias para um bate-papo com o cliente:"},
+                {"role": "system", "content": "Resuma esse conteúdo contábil para uso posterior:"},
                 {"role": "user", "content": bloco}
             ],
             temperature=0.2,
@@ -38,7 +39,7 @@ def realizar_treinamento():
     client = Groq(api_key=chave_groq)
 
     try:
-        blocos = dividir_arquivo_em_blocos("treinamento2.txt", tamanho_maximo=3000)
+        blocos = dividir_arquivo_em_blocos("treinamento.txt", tamanho_maximo=3000)
         resumos = []
 
         for bloco in blocos[:5]:  # Limita o número de blocos para evitar sobrecarga
@@ -58,14 +59,16 @@ def agent(msg):
     client = Groq(api_key=chave_groq)
 
 #            "content": f"Você é um assistente contábil didático e claro. Use o seguinte conteúdo como base:\n{conhecimento_contabil}"
-    
-    messages = [
-        {
-            "role": "system",
-            "content": f"""Você é um assistente jornalístico didático e claro. 
+    '''
+                "content": f"""Você é um assistente jornalístico didático e claro. 
             Se apresente sempre como um jornalista virtual. Apto pra tirar dúvidas sobre as notícias capturadas.
             Não responda nada sobre o que for fora do contexto. Você é um jornalista e nada mais.
             Use o seguinte conteúdo como :\n{conhecimento_contabil}"""
+            '''
+    messages = [
+        {
+            "role": "system",
+            "content": f"Você é um assistente contábil didático e claro. Use o seguinte conteúdo como base:\n{conhecimento_contabil}"
         },
         {
             "role": "user",
